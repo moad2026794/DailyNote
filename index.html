@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#0f766e">
+<title>مفكرتي</title>
+<style>
+:root{--bg:#f4f6f8;--card:#fff;--tx:#1b2430;--mut:#6b7785;--pri:#0f766e;--pri2:#14b8a6;--bd:#e3e8ee;--red:#dc2626;--amb:#d97706}
+body.dark{--bg:#10151b;--card:#1a222b;--tx:#e8edf2;--mut:#93a0ae;--bd:#2a3541}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:system-ui,"Segoe UI",Tahoma,Arial,sans-serif;background:var(--bg);color:var(--tx);padding-bottom:90px}
+header{background:var(--pri);color:#fff;padding:14px 16px;position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:8px}
+header h1{font-size:20px;margin:0;flex:1}
+header button{background:rgba(255,255,255,.18);border:0;color:#fff;border-radius:10px;padding:8px 10px;font-size:16px}
+.wrap{padding:12px;max-width:720px;margin:auto}
+input,textarea,select{width:100%;padding:11px;border:1px solid var(--bd);border-radius:10px;background:var(--card);color:var(--tx);font:inherit;margin-top:4px}
+textarea{min-height:120px;resize:vertical}
+label{font-size:13px;color:var(--mut);display:block;margin-top:12px}
+.chips{display:flex;gap:6px;overflow-x:auto;padding:8px 0}
+.chip{white-space:nowrap;padding:7px 13px;border-radius:20px;background:var(--card);border:1px solid var(--bd);color:var(--tx);font-size:14px}
+.chip.on{background:var(--pri);color:#fff;border-color:var(--pri)}
+.stats{display:flex;gap:8px;margin:6px 0}
+.stat{flex:1;background:var(--card);border-radius:12px;padding:10px;text-align:center;border:1px solid var(--bd)}
+.stat b{display:block;font-size:20px;color:var(--pri)}.stat span{font-size:12px;color:var(--mut)}
+.note{background:var(--card);border-radius:14px;padding:13px;margin:10px 0;border:1px solid var(--bd);border-right:6px solid var(--c,#0f766e)}
+.note.done{opacity:.55}.note.done h3{text-decoration:line-through}
+.note h3{margin:0 0 4px;font-size:17px}
+.note p{margin:4px 0;color:var(--mut);white-space:pre-wrap;font-size:14px;max-height:84px;overflow:hidden}
+.meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;font-size:12px}
+.tag{background:var(--bg);padding:3px 9px;border-radius:12px;color:var(--mut)}
+.tag.late{background:#fee2e2;color:var(--red)}.tag.hi{color:var(--red)}.tag.md{color:var(--amb)}
+.acts{display:flex;gap:6px;margin-top:10px}
+.acts button{flex:1;border:1px solid var(--bd);background:var(--bg);color:var(--tx);border-radius:9px;padding:8px;font-size:14px}
+.fab{position:fixed;bottom:20px;left:20px;width:60px;height:60px;border-radius:50%;background:var(--pri);color:#fff;border:0;font-size:32px;box-shadow:0 4px 14px rgba(0,0,0,.3);z-index:6}
+.modal{position:fixed;inset:0;background:var(--bg);z-index:10;overflow:auto;display:none}
+.modal.open{display:block}
+.row{display:flex;gap:10px}.row>div{flex:1}
+.btn{width:100%;padding:13px;border:0;border-radius:11px;background:var(--pri);color:#fff;font-size:16px;margin-top:16px}
+.btn.sec{background:var(--card);color:var(--tx);border:1px solid var(--bd)}
+.colors{display:flex;gap:10px;margin-top:6px}.colors i{width:32px;height:32px;border-radius:50%;border:3px solid transparent}.colors i.on{border-color:var(--tx)}
+.cl{display:flex;align-items:center;gap:8px;margin-top:6px}.cl input[type=text]{margin:0}.cl input[type=checkbox]{width:22px;height:22px;margin:0}
+.cl button{border:0;background:none;color:var(--red);font-size:20px}
+.empty{text-align:center;color:var(--mut);margin:50px 0}
+#alarm{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:20;display:none;align-items:center;justify-content:center;padding:20px}
+#alarm.open{display:flex}#alarm div{background:var(--card);padding:22px;border-radius:16px;width:100%;max-width:380px;text-align:center}
+</style>
+</head>
+<body>
+<header>
+  <h1>📒 مفكرتي</h1>
+  <button onclick="openMenu()">⋮</button>
+  <button onclick="toggleDark()">🌓</button>
+</header>
+<div class="wrap">
+  <input id="q" placeholder="🔍 بحث في الملاحظات..." oninput="render()">
+  <div class="chips" id="chips"></div>
+  <div class="stats">
+    <div class="stat"><b id="s1">0</b><span>الكل</span></div>
+    <div class="stat"><b id="s2">0</b><span>تذكيرات قادمة</span></div>
+    <div class="stat"><b id="s3">0</b><span>متأخرة</span></div>
+  </div>
+  <div id="list"></div>
+</div>
+<button class="fab" onclick="openEditor()">＋</button>
+
+<div class="modal" id="ed"><div class="wrap">
+  <h2 id="edt">ملاحظة جديدة</h2>
+  <label>العنوان</label><input id="t" placeholder="عنوان الملاحظة">
+  <label>التفاصيل</label><textarea id="b" placeholder="اكتب التفاصيل هنا..."></textarea>
+  <label>قائمة مهام (اختياري)</label><div id="cls"></div>
+  <button class="btn sec" style="margin-top:8px;padding:9px" onclick="addCl()">＋ إضافة بند</button>
+  <div class="row">
+    <div><label>التصنيف</label><select id="cat"></select></div>
+    <div><label>الأولوية</label><select id="pri"><option value="0">عادية</option><option value="1">متوسطة</option><option value="2">عالية</option></select></div>
+  </div>
+  <label>اللون</label><div class="colors" id="cols"></div>
+  <label>⏰ موعد التذكير</label><input type="datetime-local" id="rem">
+  <div class="row">
+    <div><label>التكرار</label><select id="rep"><option value="none">بدون</option><option value="daily">يوميًا</option><option value="weekly">أسبوعيًا</option><option value="monthly">شهريًا</option></select></div>
+    <div><label>التذكير المسبق</label><select id="pre"><option value="0">في الوقت</option><option value="5">قبل 5 دقائق</option><option value="30">قبل 30 دقيقة</option><option value="60">قبل ساعة</option><option value="1440">قبل يوم</option></select></div>
+  </div>
+  <label><input type="checkbox" id="pin" style="width:auto"> 📌 تثبيت في الأعلى</label>
+  <button class="btn" onclick="save()">حفظ</button>
+  <button class="btn sec" onclick="closeEditor()">إلغاء</button>
+</div></div>
+
+<div class="modal" id="menu"><div class="wrap">
+  <h2>الإعدادات</h2>
+  <button class="btn" onclick="askPerm()">🔔 تفعيل الإشعارات</button>
+  <button class="btn sec" onclick="addCat()">＋ إضافة تصنيف</button>
+  <button class="btn sec" onclick="exportData()">⬇️ تصدير نسخة احتياطية</button>
+  <button class="btn sec" onclick="document.getElementById('imp').click()">⬆️ استيراد نسخة احتياطية</button>
+  <input type="file" id="imp" accept=".json" style="display:none" onchange="importData(event)">
+  <button class="btn sec" onclick="closeMenu()">رجوع</button>
+</div></div>
+
+<div id="alarm"><div>
+  <div style="font-size:44px">⏰</div>
+  <h2 id="at" style="margin:6px 0"></h2><p id="ab" style="color:var(--mut)"></p>
+  <button class="btn" onclick="snooze()">غفوة 10 دقائق</button>
+  <button class="btn sec" onclick="dismiss()">تم</button>
+</div></div>
+
+<script>
+const $=id=>document.getElementById(id);
+const COLORS=['#0f766e','#2563eb','#7c3aed','#db2777','#d97706','#dc2626'];
+let S=load();let filter='الكل',editId=null,curColor=COLORS[0],alarmId=null;
+function load(){try{const d=JSON.parse(localStorage.getItem('notes_v1'));if(d)return d}catch(e){}
+  return{notes:[],cats:['شخصي','عمل','دراسة','أفكار'],dark:false}}
+function persist(){try{localStorage.setItem('notes_v1',JSON.stringify(S))}catch(e){}}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
+function fmt(ts){return new Date(ts).toLocaleString('ar',{dateStyle:'medium',timeStyle:'short'})}
+function esc(s){return String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+function toLocalInput(ts){const d=new Date(ts-new Date(ts).getTimezoneOffset()*60000);return d.toISOString().slice(0,16)}
+
+function render(){
+  const q=$('q').value.trim().toLowerCase();const now=Date.now();
+  $('chips').innerHTML=['الكل','المثبتة','تذكيرات','المنجزة',...S.cats].map(c=>`<span class="chip ${c===filter?'on':''}" onclick="setF('${esc(c)}')">${esc(c)}</span>`).join('');
+  let L=S.notes.filter(n=>{
+    if(filter==='المنجزة')return n.done;
+    if(n.done)return false;
+    if(filter==='المثبتة'&&!n.pin)return false;
+    if(filter==='تذكيرات'&&!n.rem)return false;
+    if(!['الكل','المثبتة','تذكيرات'].includes(filter)&&n.cat!==filter)return false;
+    return true}).filter(n=>!q||(n.t+' '+n.b+' '+(n.cl||[]).map(c=>c.x).join(' ')).toLowerCase().includes(q));
+  L.sort((a,b)=>(b.pin?1:0)-(a.pin?1:0)||(b.pri-a.pri)||((a.rem||9e15)-(b.rem||9e15))||b.created-a.created);
+  const act=S.notes.filter(n=>!n.done);
+  $('s1').textContent=act.length;
+  $('s2').textContent=act.filter(n=>n.rem&&n.rem>now).length;
+  $('s3').textContent=act.filter(n=>n.rem&&n.rem<=now&&!n.fired).length;
+  $('list').innerHTML=L.length?L.map(n=>{
+    const late=n.rem&&n.rem<now&&!n.done;
+    const cl=n.cl||[];const dn=cl.filter(c=>c.d).length;
+    return `<div class="note ${n.done?'done':''}" style="--c:${n.color}">
+    <h3>${n.pin?'📌 ':''}${esc(n.t)||'بدون عنوان'}</h3>
+    ${n.b?`<p>${esc(n.b)}</p>`:''}
+    ${cl.length?`<p>☑️ ${dn}/${cl.length} من البنود منجزة</p>`:''}
+    <div class="meta"><span class="tag">${esc(n.cat)}</span>
+    ${n.pri==2?'<span class="tag hi">● أولوية عالية</span>':n.pri==1?'<span class="tag md">● متوسطة</span>':''}
+    ${n.rem?`<span class="tag ${late?'late':''}">⏰ ${fmt(n.rem)}${n.rep!=='none'?' 🔁':''}</span>`:''}
+    <span class="tag">${fmt(n.created)}</span></div>
+    <div class="acts"><button onclick="toggleDone('${n.id}')">${n.done?'↩️ استعادة':'✅ تم'}</button><button onclick="openEditor('${n.id}')">✏️ تعديل</button><button onclick="del('${n.id}')">🗑️ حذف</button></div></div>`}).join('')
+    :'<div class="empty">لا توجد ملاحظات هنا.<br>اضغط ＋ لإضافة أول ملاحظة</div>';
+}
+function setF(c){filter=c;render()}
+
+function openEditor(id){
+  editId=id||null;const n=S.notes.find(x=>x.id===id)||{t:'',b:'',cat:S.cats[0],pri:0,color:COLORS[0],rem:null,rep:'none',pre:0,pin:false,cl:[]};
+  $('edt').textContent=id?'تعديل الملاحظة':'ملاحظة جديدة';
+  $('t').value=n.t;$('b').value=n.b;
+  $('cat').innerHTML=S.cats.map(c=>`<option ${c===n.cat?'selected':''}>${esc(c)}</option>`).join('');
+  $('pri').value=n.pri;$('rep').value=n.rep;$('pre').value=n.pre||0;$('pin').checked=!!n.pin;
+  $('rem').value=n.rem?toLocalInput(n.rem+(n.pre||0)*60000):'';
+  curColor=n.color;drawCols();$('cls').innerHTML='';(n.cl||[]).forEach(c=>addCl(c));
+  $('ed').classList.add('open');window.scrollTo(0,0)}
+function closeEditor(){$('ed').classList.remove('open')}
+function drawCols(){$('cols').innerHTML=COLORS.map(c=>`<i style="background:${c}" class="${c===curColor?'on':''}" onclick="curColor='${c}';drawCols()"></i>`).join('')}
+function addCl(c){const d=document.createElement('div');d.className='cl';
+  d.innerHTML=`<input type="checkbox" ${c&&c.d?'checked':''}><input type="text" placeholder="بند..." value="${esc(c?c.x:'')}"><button onclick="this.parentNode.remove()">✕</button>`;$('cls').appendChild(d)}
+function save(){
+  const t=$('t').value.trim(),b=$('b').value.trim();
+  const cl=[...document.querySelectorAll('#cls .cl')].map(d=>({d:d.children[0].checked,x:d.children[1].value.trim()})).filter(c=>c.x);
+  if(!t&&!b&&!cl.length){alert('اكتب عنوانًا أو تفاصيل أولًا');return}
+  const pre=+$('pre').value;let rem=$('rem').value?new Date($('rem').value).getTime()-pre*60000:null;
+  const old=S.notes.find(x=>x.id===editId);
+  const n={id:editId||uid(),t,b,cl,cat:$('cat').value,pri:+$('pri').value,color:curColor,rem,rep:$('rep').value,pre,pin:$('pin').checked,
+    done:old?old.done:false,created:old?old.created:Date.now(),fired:false};
+  if(old)Object.assign(old,n);else S.notes.push(n);
+  persist();closeEditor();render();if(rem)askPerm(true)}
+function toggleDone(id){const n=S.notes.find(x=>x.id===id);n.done=!n.done;persist();render()}
+function del(id){if(confirm('حذف هذه الملاحظة؟')){S.notes=S.notes.filter(x=>x.id!==id);persist();render()}}
+function openMenu(){$('menu').classList.add('open')}function closeMenu(){$('menu').classList.remove('open')}
+function addCat(){const c=prompt('اسم التصنيف الجديد:');if(c&&c.trim()&&!S.cats.includes(c.trim())){S.cats.push(c.trim());persist();render()}}
+function toggleDark(){S.dark=!S.dark;document.body.classList.toggle('dark',S.dark);persist()}
+
+function exportData(){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(S)],{type:'application/json'}));a.download='notes-backup.json';a.click()}
+function importData(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!Array.isArray(d.notes))throw 0;S=d;persist();render();closeMenu();alert('تم الاستيراد')}catch(x){alert('ملف غير صالح')}};r.readAsText(f)}
+
+/* التذكيرات */
+function askPerm(silent){if(!('Notification' in window)){if(!silent)alert('الإشعارات غير مدعومة هنا، سيظهر تنبيه داخل التطبيق.');return}
+  if(Notification.permission==='default')Notification.requestPermission().then(()=>{if(!silent)alert('تم')});
+  else if(!silent)alert(Notification.permission==='granted'?'الإشعارات مفعّلة':'الإشعارات محظورة من إعدادات الجهاز')}
+function beep(){try{const c=new (window.AudioContext||window.webkitAudioContext)();[0,.35,.7].forEach(t=>{const o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=880;g.gain.value=.2;o.start(c.currentTime+t);o.stop(c.currentTime+t+.2)})}catch(e){}
+  try{navigator.vibrate&&navigator.vibrate([300,150,300,150,300])}catch(e){}}
+function check(){
+  const now=Date.now();
+  for(const n of S.notes){
+    if(n.rem&&!n.done&&!n.fired&&n.rem<=now&&now-n.rem<7*864e5){fire(n);break}}}
+function fire(n){
+  n.fired=true;alarmId=n.id;
+  if(n.rep!=='none'){const d=new Date(n.rem);const step=()=>n.rep==='daily'?d.setDate(d.getDate()+1):n.rep==='weekly'?d.setDate(d.getDate()+7):d.setMonth(d.getMonth()+1);
+    do step();while(d.getTime()<=Date.now());n.rem=d.getTime();n.fired=false}
+  persist();render();
+  $('at').textContent=n.t||'تذكير';$('ab').textContent=n.b.slice(0,120);$('alarm').classList.add('open');beep();
+  try{if('Notification' in window&&Notification.permission==='granted')new Notification('⏰ '+(n.t||'تذكير'),{body:n.b.slice(0,100)})}catch(e){}}
+function dismiss(){$('alarm').classList.remove('open');alarmId=null;check()}
+function snooze(){const n=S.notes.find(x=>x.id===alarmId);if(n){n.rem=Date.now()+10*60000;n.fired=false;n.rep=n.rep;persist()}dismiss();render()}
+
+document.body.classList.toggle('dark',S.dark);
+render();check();setInterval(check,15000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)check()});
+</script>
+</body>
+</html>
